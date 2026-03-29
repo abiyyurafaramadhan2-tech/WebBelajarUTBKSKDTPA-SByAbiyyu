@@ -1,0 +1,96 @@
+/* © 2026 QuizGenius by Abiyyu Rafa Ramadhan */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background:   13 10 26;
+    --foreground:   248 250 252;
+    --brand-purple: 70 26 66;
+    --brand-neon:   199 125 255;
+  }
+
+  * {
+    @apply border-white/10;
+  }
+
+  body {
+    @apply bg-surface-900 text-white antialiased;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(107,45,102,0.3), transparent),
+      url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%236B2D66' fill-opacity='0.04'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0D0A1A; }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(#C77DFF, #48CAE4);
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: rgba(199, 125, 255, 0.3);
+    color: #fff;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-surface-700/60 backdrop-blur-xl border border-white/10 rounded-2xl;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .neon-border {
+    @apply border border-brand-neon/40;
+    box-shadow: 0 0 15px rgba(199,125,255,0.2), inset 0 0 15px rgba(199,125,255,0.05);
+  }
+
+  .btn-neon {
+    @apply relative overflow-hidden font-bold tracking-wide transition-all duration-200;
+    @apply bg-gradient-to-r from-brand-purple-light to-brand-neon-blue;
+    @apply hover:shadow-neon-purple active:scale-95;
+  }
+
+  .btn-neon::before {
+    content: '';
+    @apply absolute inset-0 bg-white/20 translate-x-[-100%] skew-x-12 transition-transform duration-500;
+  }
+
+  .btn-neon:hover::before {
+    @apply translate-x-[200%];
+  }
+
+  .option-card {
+    @apply glass-card p-4 cursor-pointer transition-all duration-200;
+    @apply hover:border-brand-neon/60 hover:bg-surface-600/80;
+    @apply active:scale-[0.98];
+  }
+
+  .option-card.correct {
+    @apply border-brand-neon-green bg-brand-neon-green/10;
+    box-shadow: 0 0 20px rgba(57,255,20,0.3);
+  }
+
+  .option-card.incorrect {
+    @apply border-brand-neon-pink bg-brand-neon-pink/10;
+    box-shadow: 0 0 20px rgba(255,0,110,0.3);
+  }
+
+  .option-card.selected {
+    @apply border-brand-neon bg-brand-neon/10;
+    box-shadow: 0 0 15px rgba(199,125,255,0.3);
+  }
+
+  .tier-bronze   { @apply text-amber-600; }
+  .tier-silver   { @apply text-slate-300; }
+  .tier-gold     { @apply text-yellow-400; }
+  .tier-platinum { @apply text-cyan-300; }
+  .tier-elite    { @apply text-brand-neon animate-neon-pulse; }
+}
+
+@layer utilities {
+  .text-neon { @apply text-brand-neon drop-shadow-[0_0_10px_rgba(199,125,255,0.8)]; }
+  .text-glow-blue { @apply text-brand-neon-blue drop-shadow-[0_0_10px_rgba(72,202,228,0.8)]; }
+  .text-glow-green { @apply text-brand-neon-green drop-shadow-[0_0_10px_rgba(57,255,20,0.8)]; }
+      }
