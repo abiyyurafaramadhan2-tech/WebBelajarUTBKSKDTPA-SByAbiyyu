@@ -1,0 +1,239 @@
+// ============================================================
+// QuizGenius — Prisma Schema
+// © 2026 QuizGenius by Abiyyu Rafa Ramadhan. All Rights Reserved.
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── ENUMS ────────────────────────────────────────────────────
+
+enum UserRole {
+  STUDENT
+  ADMIN
+}
+
+enum TierLevel {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  ELITE
+}
+
+enum SessionMode {
+  PRACTICE
+  SERIOUS
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum DifficultyLevel {
+  EASY
+  MEDIUM
+  HARD
+}
+
+// ── USER ─────────────────────────────────────────────────────
+
+model User {
+  id              String    @id @default(cuid())
+  name            String
+  email           String    @unique
+  password        String
+  avatarUrl       String?
+  avatarEmoji     String    @default("🧠")
+  role            UserRole  @default(STUDENT)
+  tier            TierLevel @default(BRONZE)
+  tierPoints      Int       @default(0)
+  totalXP         Int       @default(0)
+  level           Int       @default(1)
+  streakDays      Int       @default(0)
+  lastActiveDate  DateTime?
+  badges          Badge[]
+  sessions        QuizSession[]
+  leaderboardEntries LeaderboardEntry[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([totalXP])
+  @@index([tier, tierPoints])
+}
+
+// ── CATEGORY (e.g. UTBK, SKD, TPA) ──────────────────────────
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique   // e.g. "UTBK/SNBT"
+  slug        String    @unique   // e.g. "utbk"
+  description String?
+  iconEmoji   String    @default("📚")
+  color       String    @default("#6366f1")
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  subtests    Subtest[]
+  createdAt   DateTime  @default(now())
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+// ── SUBTEST (e.g. TWK, TIU, Penalaran Umum) ──────────────────
+
+model Subtest {
+  id              String    @id @default(cuid())
+  categoryId      String
+  name            String                          // e.g. "Kemampuan Penalaran Umum"
+  slug            String                          // e.g. "kemampuan-penalaran-umum"
+  description     String?
+  iconEmoji       String    @default("🎯")
+  color           String    @default("#8b5cf6")
+  totalQuestions  Int       @default(500)        // warehouse size
+  timeLimit       Int       @default(60)         // in minutes for SERIOUS mode
+  isActive        Boolean   @default(true)
+  sortOrder       Int       @default(0)
+  category        Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  questions       Question[]
+  sessions        QuizSession[]
+  createdAt       DateTime  @default(now())
+
+  @@unique([categoryId, slug])
+  @@index([categoryId])
+  @@index([isActive])
+}
+
+// ── QUESTION ──────────────────────────────────────────────────
+
+model Question {
+  id                String          @id @default(cuid())
+  subtestId         String
+  // IRT Fields
+  difficultyLevel   DifficultyLevel @default(MEDIUM)
+  difficultyWeight  Float           @default(1.0)   // IRT b-parameter (−3 to +3)
+  discriminationA   Float           @default(1.0)   // IRT a-parameter
+  guessingC         Float           @default(0.25)  // IRT c-parameter (guessing)
+  // Content
+  stem              String          // The question text (supports markdown)
+  optionA           String
+  optionB           String
+  optionC           String
+  optionD           String
+  optionE           String?                          // optional 5th choice
+  correctOption     String                           // "A", "B", "C", "D", or "E"
+  explanation       String                           // shown in Practice Mode
+  topic             String?                          // sub-topic tag
+  imageUrl          String?                          // optional image
+  isActive          Boolean         @default(true)
+  usageCount        Int             @default(0)      // analytics
+  correctCount      Int             @default(0)      // analytics
+  subtest           Subtest         @relation(fields: [subtestId], references: [id], onDelete: Cascade)
+  sessionAnswers    SessionAnswer[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([subtestId, difficultyLevel])
+  @@index([subtestId, isActive])
+  @@index([difficultyWeight])
+}
+
+// ── QUIZ SESSION ───────────────────────────────────────────────
+
+model QuizSession {
+  id              String        @id @default(cuid())
+  userId          String
+  subtestId       String
+  mode            SessionMode
+  status          SessionStatus @default(IN_PROGRESS)
+  // Scoring
+  rawScore        Float         @default(0)
+  irtScore        Float         @default(0)    // IRT theta estimate
+  totalQuestions  Int
+  correctCount    Int           @default(0)
+  incorrectCount  Int           @default(0)
+  skippedCount    Int           @default(0)
+  accuracy        Float         @default(0)
+  // Gamification
+  xpEarned        Int           @default(0)
+  tierPointsEarned Int          @default(0)
+  streakBonus     Int           @default(0)
+  // Time
+  timeLimitSec    Int?
+  timeSpentSec    Int           @default(0)
+  startedAt       DateTime      @default(now())
+  completedAt     DateTime?
+  // Relations
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subtest         Subtest       @relation(fields: [subtestId], references: [id])
+  answers         SessionAnswer[]
+  leaderboardEntry LeaderboardEntry?
+  createdAt       DateTime      @default(now())
+
+  @@index([userId, status])
+  @@index([subtestId, mode])
+  @@index([userId, createdAt])
+}
+
+// ── SESSION ANSWER ─────────────────────────────────────────────
+
+model SessionAnswer {
+  id              String      @id @default(cuid())
+  sessionId       String
+  questionId      String
+  selectedOption  String?     // null = skipped
+  isCorrect       Boolean     @default(false)
+  timeSpentSec    Int         @default(0)
+  irtProbability  Float?      // P(θ) for this question given user ability
+  session         QuizSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question        Question    @relation(fields: [questionId], references: [id])
+  answeredAt      DateTime    @default(now())
+
+  @@unique([sessionId, questionId])
+  @@index([sessionId])
+  @@index([questionId])
+}
+
+// ── LEADERBOARD ────────────────────────────────────────────────
+
+model LeaderboardEntry {
+  id          String      @id @default(cuid())
+  userId      String
+  sessionId   String      @unique
+  irtScore    Float
+  rawScore    Float
+  accuracy    Float
+  timeSpentSec Int
+  rank        Int?
+  period      String      @default("all-time")  // "daily", "weekly", "all-time"
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session     QuizSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+
+  @@index([irtScore])
+  @@index([period, irtScore])
+  @@index([userId])
+}
+
+// ── BADGE ──────────────────────────────────────────────────────
+
+model Badge {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String
+  iconEmoji   String
+  color       String   @default("#fbbf24")
+  earnedAt    DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
