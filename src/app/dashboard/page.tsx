@@ -34,21 +34,26 @@ export default async function DashboardPage() {
     where:   { userId: user.id, status: 'COMPLETED' },
     orderBy: { completedAt: 'desc' },
     take:    5,
-    include: { subtest: { include: { category: true } } },
+    include: { 
+      subtest: { 
+        include: { category: true } 
+      } 
+    },
   });
 
   // Stats
   const totalSessions = await prisma.quizSession.count({
     where: { userId: user.id, status: 'COMPLETED' },
   });
-  const bestScore = await prisma.quizSession.findFirst({
+  
+  const bestScoreResult = await prisma.quizSession.findFirst({
     where:   { userId: user.id, status: 'COMPLETED' },
     orderBy: { irtScore: 'desc' },
     select:  { irtScore: true },
   });
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#0a0a0a]">
       <Navbar user={user} />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-8">
@@ -56,9 +61,8 @@ export default async function DashboardPage() {
 
           {/* ── Sidebar ── */}
           <aside className="xl:col-span-1 space-y-4">
-            {/* User card */}
-            <div className="glass-card p-6 text-center">
-              <div className="text-5xl mb-3">{user.avatarEmoji}</div>
+            <div className="glass-card p-6 text-center border border-white/10 rounded-2xl bg-white/5">
+              <div className="text-5xl mb-3">{user.avatarEmoji || '👤'}</div>
               <h2 className="text-white font-bold text-xl mb-1">{user.name}</h2>
               <p className="text-white/40 text-sm mb-5">{user.email}</p>
 
@@ -69,13 +73,12 @@ export default async function DashboardPage() {
               </div>
             </div>
 
-            {/* Quick stats */}
-            <div className="glass-card p-5 space-y-4">
+            <div className="glass-card p-5 space-y-4 border border-white/10 rounded-2xl bg-white/5">
               <h3 className="text-white/60 text-xs font-bold uppercase tracking-wider">Statistik</h3>
               {[
                 { label:'Total Sesi',   value: formatNumber(totalSessions), emoji:'🎮' },
-                { label:'Skor IRT Terbaik', value: bestScore ? `${Math.round(bestScore.irtScore)}`, emoji:'🏆' },
-                { label:'Streak Hari', value: `${user.streakDays} hari`, emoji:'🔥' },
+                { label:'Skor IRT Terbaik', value: bestScoreResult ? `${Math.round(bestScoreResult.irtScore)}` : '0', emoji:'🏆' },
+                { label:'Streak Hari', value: `${user.streakDays || 0} hari`, emoji:'🔥' },
               ].map(s => (
                 <div key={s.label} className="flex items-center justify-between">
                   <span className="text-white/50 text-sm flex items-center gap-2">
@@ -85,29 +88,6 @@ export default async function DashboardPage() {
                 </div>
               ))}
             </div>
-
-            {/* Recent sessions */}
-            {recentSessions.length > 0 && (
-              <div className="glass-card p-5">
-                <h3 className="text-white/60 text-xs font-bold uppercase tracking-wider mb-4">Riwayat Terakhir</h3>
-                <div className="space-y-3">
-                  {recentSessions.map(s => (
-                    <div key={s.id} className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm"
-                        style={{ background: `${s.subtest.category.color}20` }}>
-                        {s.subtest.category.iconEmoji}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white text-xs font-semibold truncate">{s.subtest.name}</p>
-                        <p className="text-white/40 text-[10px]">
-                          {s.mode === 'PRACTICE' ? '📖 Latihan' : '⚡ Tryout'} · {Math.round(s.irtScore)} IRT
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </aside>
 
           {/* ── Main content ── */}
@@ -139,4 +119,4 @@ export default async function DashboardPage() {
       <Footer />
     </div>
   );
-                                                }
+}
