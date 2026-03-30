@@ -1,6 +1,7 @@
 // QuizGenius Seed — 500 questions per subtest
 // © 2026 QuizGenius by Abiyyu Rafa Ramadhan
 import { PrismaClient, DifficultyLevel } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -69,8 +70,6 @@ function generateQuestionsForSubtest(
     discA: number,
     guesC: number
   ) {
-    // In a real seed, these would be actual curated questions
-    // This generates structurally valid placeholder data
     const opts = ['A','B','C','D'];
     const correct = opts[i % 4];
     return {
@@ -93,7 +92,6 @@ function generateQuestionsForSubtest(
 
   let idx = 0;
 
-  // Easy: b = [-2, -0.5], a = [0.5, 1.0], c = 0.25
   for (let i = 0; i < easyCount; i++, idx++) {
     questions.push(makeQuestion(
       idx, 'EASY',
@@ -103,7 +101,6 @@ function generateQuestionsForSubtest(
     ));
   }
 
-  // Medium: b = [-0.5, 0.5], a = [1.0, 1.5], c = 0.25
   for (let i = 0; i < mediumCount; i++, idx++) {
     questions.push(makeQuestion(
       idx, 'MEDIUM',
@@ -113,7 +110,6 @@ function generateQuestionsForSubtest(
     ));
   }
 
-  // Hard: b = [0.5, 3.0], a = [1.5, 2.5], c = 0.2
   for (let i = 0; i < hardCount; i++, idx++) {
     questions.push(makeQuestion(
       idx, 'HARD',
@@ -131,7 +127,6 @@ async function main() {
   console.log('🌱 QuizGenius Seed dimulai...\n');
   console.log('© 2026 QuizGenius by Abiyyu Rafa Ramadhan\n');
 
-  // Clear existing (optional — comment out to preserve)
   await prisma.sessionAnswer.deleteMany();
   await prisma.quizSession.deleteMany();
   await prisma.leaderboardEntry.deleteMany();
@@ -169,10 +164,8 @@ async function main() {
         },
       });
 
-      // Generate 500 questions per subtest
       const questions = generateQuestionsForSubtest(subtest.id, st.slug, 500);
 
-      // Batch insert (100 at a time)
       const BATCH = 100;
       for (let b = 0; b < questions.length; b += BATCH) {
         await prisma.question.createMany({
@@ -184,9 +177,8 @@ async function main() {
     }
   }
 
-  // Seed admin user
-  const bcrypt = await import('bcryptjs');
-  const hash   = await bcrypt.hash('Admin2026!', 12);
+  // FIXED: Menggunakan bcryptjs dengan cara yang benar
+  const hash = await bcrypt.hash('Admin2026!', 12);
 
   await prisma.user.upsert({
     where:  { email: 'admin@quizgenius.id' },
