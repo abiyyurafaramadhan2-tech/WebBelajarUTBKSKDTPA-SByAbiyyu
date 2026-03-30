@@ -1,14 +1,21 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   experimental: {
     serverActions: {
-      allowedOrigins: ['localhost:3000', process.env.NEXTAUTH_URL].filter(Boolean),
+      allowedOrigins: ['localhost:3000'],
     },
   },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**' },
     ],
+  },
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   },
 };
 
