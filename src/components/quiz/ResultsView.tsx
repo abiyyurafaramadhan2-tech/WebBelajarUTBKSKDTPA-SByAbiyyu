@@ -3,9 +3,57 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, RotateCcw, Home, ChevronDown, ChevronUp, CheckCircle2, XCircle, Minus } from 'lucide-react';
+import { 
+  Trophy, RotateCcw, Home, ChevronDown, ChevronUp, 
+  CheckCircle2, XCircle, Minus, Lightbulb 
+} from 'lucide-react';
 import { formatTime } from '@/lib/utils';
 
+// --- SUB-COMPONENT: ExplanationBox Premium ---
+function ExplanationBox({ show, explanation, isCorrect, correctAnswer }: { 
+  show: boolean; explanation: string; isCorrect: boolean; correctAnswer: string 
+}) {
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className={`mt-4 relative overflow-hidden rounded-2xl p-5 border shadow-lg ${
+            isCorrect ? 'border-brand-neon-green/30 bg-brand-neon-green/5' : 'border-brand-neon/30 bg-brand-neon/5'
+          }`}
+        >
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-brand-neon opacity-50" />
+          <div className="flex items-start gap-3 text-left">
+            <div className={`mt-0.5 w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+              isCorrect ? 'bg-brand-neon-green/20' : 'bg-brand-neon/20'
+            }`}>
+              <Lightbulb className={`w-4 h-4 ${isCorrect ? 'text-brand-neon-green' : 'text-brand-neon'}`} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <h4 className={`text-sm font-bold ${isCorrect ? 'text-brand-neon-green' : 'text-brand-neon'}`}>
+                  {isCorrect ? '✨ Analisis' : '💡 Pembahasan'}
+                </h4>
+                {!isCorrect && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand-neon/20 text-brand-neon border border-brand-neon/30 font-bold">
+                    Kunci: {correctAnswer}
+                  </span>
+                )}
+              </div>
+              <p className="text-white/80 text-sm leading-relaxed whitespace-pre-line">
+                {explanation || "Pembahasan untuk soal ini sedang diproses oleh sistem."}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// --- MAIN COMPONENT: ResultsView ---
 interface Breakdown { correct:number; incorrect:number; skipped:number; total:number }
 
 interface SessionData {
@@ -50,15 +98,12 @@ export function ResultsView({ session, answers }: { session: SessionData; answer
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-10 space-y-6">
-
       {/* Hero result card */}
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 200 }}
         className="glass-card p-8 text-center relative overflow-hidden"
       >
-        {/* BG glow */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <motion.div
             className="w-64 h-64 rounded-full blur-3xl"
@@ -69,11 +114,9 @@ export function ResultsView({ session, answers }: { session: SessionData; answer
         </div>
 
         <div className="relative">
-          {/* Grade ring */}
           <motion.div
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
             className="w-28 h-28 rounded-full mx-auto mb-4 flex items-center justify-center border-4 relative"
             style={{
               borderColor: grade.color,
@@ -86,11 +129,7 @@ export function ResultsView({ session, answers }: { session: SessionData; answer
             </span>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <p className="text-xl font-bold text-white mb-1">{grade.desc}</p>
             <p className="text-white/50 text-sm">
               {session.subtestEmoji} {session.subtestName} · {session.mode === 'PRACTICE' ? '📖 Latihan' : '⚡ Tryout'}
@@ -107,13 +146,7 @@ export function ResultsView({ session, answers }: { session: SessionData; answer
           { label:'XP Dapat',  value:`+${session.xpEarned}`,   color:'#39FF14', emoji:'⚡' },
           { label:'Waktu',     value:formatTime(session.timeSpentSec), color:'#FFD60A', emoji:'⏱️' },
         ].map((s, i) => (
-          <motion.div
-            key={s.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 * i + 0.3 }}
-            className="glass-card p-4 text-center"
-          >
+          <motion.div key={s.label} className="glass-card p-4 text-center">
             <p className="text-lg mb-1">{s.emoji}</p>
             <p className="text-xl font-black" style={{ color: s.color }}>{s.value}</p>
             <p className="text-white/40 text-xs mt-0.5">{s.label}</p>
@@ -122,12 +155,7 @@ export function ResultsView({ session, answers }: { session: SessionData; answer
       </div>
 
       {/* Breakdown */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="glass-card p-5"
-      >
+      <motion.div className="glass-card p-5">
         <h3 className="text-white/60 text-xs font-bold uppercase tracking-wider mb-4">Rincian Jawaban</h3>
         <div className="grid grid-cols-3 gap-4">
           {[
@@ -145,7 +173,7 @@ export function ResultsView({ session, answers }: { session: SessionData; answer
       </motion.div>
 
       {/* Review answers toggle */}
-      <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ delay:0.6 }}>
+      <div>
         <button
           onClick={() => setShowReview(v => !v)}
           className="w-full glass-card p-4 flex items-center justify-between text-white font-semibold hover:bg-white/5 transition-colors"
@@ -172,19 +200,13 @@ export function ResultsView({ session, answers }: { session: SessionData; answer
                       a.selectedOption === null ? 'bg-brand-neon-yellow/20' :
                       a.isCorrect ? 'bg-brand-neon-green/20' : 'bg-brand-neon-pink/20'
                     }`}>
-                      {a.selectedOption === null
-                        ? <Minus className="w-3 h-3 text-brand-neon-yellow" />
-                        : a.isCorrect
-                        ? <CheckCircle2 className="w-3 h-3 text-brand-neon-green" />
-                        : <XCircle className="w-3 h-3 text-brand-neon-pink" />}
+                      {a.selectedOption === null ? <Minus className="w-3 h-3 text-brand-neon-yellow" /> : a.isCorrect ? <CheckCircle2 className="w-3 h-3 text-brand-neon-green" /> : <XCircle className="w-3 h-3 text-brand-neon-pink" />}
                     </div>
                     <span className="text-white/70 text-sm flex-1 truncate">
                       <span className="text-white/40 mr-2">{i + 1}.</span>
-                      {a.stem.slice(0, 80)}{a.stem.length > 80 ? '...' : ''}
+                      {a.stem}
                     </span>
-                    {expandedId === a.questionId
-                      ? <ChevronUp className="w-4 h-4 text-white/30 shrink-0" />
-                      : <ChevronDown className="w-4 h-4 text-white/30 shrink-0" />}
+                    {expandedId === a.questionId ? <ChevronUp className="w-4 h-4 text-white/30 shrink-0" /> : <ChevronDown className="w-4 h-4 text-white/30 shrink-0" />}
                   </button>
 
                   <AnimatePresence>
@@ -193,7 +215,7 @@ export function ResultsView({ session, answers }: { session: SessionData; answer
                         initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }}
                         className="overflow-hidden border-t border-white/5"
                       >
-                        <div className="p-4 space-y-3">
+                        <div className="p-4 space-y-4">
                           <p className="text-white text-sm leading-relaxed">{a.stem}</p>
                           <div className="space-y-2">
                             {(['A','B','C','D','E'] as const).filter(k => a.options[k]).map(key => {
@@ -207,23 +229,22 @@ export function ResultsView({ session, answers }: { session: SessionData; answer
                                     'bg-white/5'
                                   }`}
                                 >
-                                  <span className={`font-bold w-5 shrink-0 ${
-                                    isCorrect ? 'text-brand-neon-green' :
-                                    isSelected && !isCorrect ? 'text-brand-neon-pink' : 'text-white/40'
-                                  }`}>{key}</span>
+                                  <span className={`font-bold w-5 shrink-0 ${isCorrect ? 'text-brand-neon-green' : isSelected && !isCorrect ? 'text-brand-neon-pink' : 'text-white/40'}`}>{key}</span>
                                   <span className="text-white/70">{a.options[key]}</span>
-                                  {isCorrect   && <CheckCircle2 className="w-3.5 h-3.5 text-brand-neon-green ml-auto shrink-0" />}
+                                  {isCorrect && <CheckCircle2 className="w-3.5 h-3.5 text-brand-neon-green ml-auto shrink-0" />}
                                   {isSelected && !isCorrect && <XCircle className="w-3.5 h-3.5 text-brand-neon-pink ml-auto shrink-0" />}
                                 </div>
                               );
                             })}
                           </div>
-                          {a.explanation && (
-                            <div className="bg-brand-neon/5 border border-brand-neon/20 rounded-xl p-3">
-                              <p className="text-brand-neon text-xs font-bold mb-1">💡 Pembahasan</p>
-                              <p className="text-white/70 text-xs leading-relaxed">{a.explanation}</p>
-                            </div>
-                          )}
+                          
+                          {/* JITU: Panggil ExplanationBox di sini agar otomatis tampil */}
+                          <ExplanationBox 
+                            show={true} // Selalu tampilkan kalau detail soal dibuka
+                            explanation={a.explanation}
+                            isCorrect={a.isCorrect}
+                            correctAnswer={a.correctOption}
+                          />
                         </div>
                       </motion.div>
                     )}
@@ -233,15 +254,10 @@ export function ResultsView({ session, answers }: { session: SessionData; answer
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </div>
 
       {/* Action buttons */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.7 }}
-        className="flex flex-col sm:flex-row gap-3 pb-4"
-      >
+      <div className="flex flex-col sm:flex-row gap-3 pb-4">
         <Link href="/dashboard" className="flex items-center justify-center gap-2 flex-1 py-4 rounded-2xl border border-white/10 text-white/70 hover:text-white hover:border-white/30 font-bold transition-all glass-card">
           <Home className="w-4 h-4" /> Dashboard
         </Link>
@@ -251,7 +267,7 @@ export function ResultsView({ session, answers }: { session: SessionData; answer
         <Link href={`/quiz/${session.subtestName}`} className="flex items-center justify-center gap-2 flex-1 btn-neon py-4 rounded-2xl text-white font-bold">
           <RotateCcw className="w-4 h-4" /> Ulangi
         </Link>
-      </motion.div>
+      </div>
     </div>
   );
-                                                                                            }
+}
