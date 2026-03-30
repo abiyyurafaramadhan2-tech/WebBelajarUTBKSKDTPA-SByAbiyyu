@@ -15,3 +15,17 @@ const config: Config = {
   plugins: [],
 };
 export default config;
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "npm install && npx prisma generate && npm run build"
+  },
+  "deploy": {
+    "startCommand": "npx prisma migrate deploy && npm start",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3,
+    "healthCheckPath": "/",
+    "healthCheckTimeout": 100
+  }
+}
