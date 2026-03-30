@@ -1,39 +1,20 @@
-import type { Config } from 'tailwindcss';
-import { fontFamily } from 'tailwindcss/defaultTheme';
+import type { Config } from "tailwindcss";
 
 const config: Config = {
-  darkMode: ['class'],
+  // Bagian ini yang paling krusial!
   content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    "./src/**/*.{js,ts,jsx,tsx,mdx}", // Ini akan men-scan SEMUA file di dalam folder src
+    "./app/**/*.{js,ts,jsx,tsx,mdx}", // Jaga-jaga kalau kamu pakai struktur tanpa src
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ['var(--font-fredoka)', ...fontFamily.sans],
-        fredoka: ['var(--font-fredoka)', ...fontFamily.sans],
-      },
-      colors: {
-        // QuizGenius Vibrant Dark Palette
-        brand: {
-          purple:     '#461A42',
-          'purple-mid': '#6B2D66',
-          'purple-light': '#9D4EDD',
-          neon:       '#C77DFF',
-          'neon-blue': '#48CAE4',
-          'neon-green': '#39FF14',
-          'neon-pink':  '#FF006E',
-          'neon-yellow':'#FFD60A',
-          'neon-orange':'#FF6B35',
-        },
-        surface: {
-          900: '#0D0A1A',
-          800: '#130F24',
-          700: '#1A142E',
-          600: '#231A3E',
-          500: '#2D2250',
-        },
+      // Biarkan kosong dulu biar gak ada yang bentrok
+    },
+  },
+  plugins: [],
+};
+export default config;
       },
       backgroundImage: {
         'gradient-brand': 'linear-gradient(135deg, #461A42 0%, #1A142E 50%, #0D0A1A 100%)',
